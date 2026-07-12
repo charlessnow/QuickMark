@@ -1,9 +1,28 @@
-# PeekMark
+<p align="center">
+  <img src="QuickMarkApp/PeekMark.icon/Assets/marklogo2.png" width="96" height="96" alt="PeekMark icon">
+</p>
 
-A lightweight macOS Markdown tool — Quick Look extension + menu bar viewer.
+<h1 align="center">PeekMark — Markdown preview that belongs on your Mac.</h1>
 
-Press **Space** in Finder to preview any `.md` file with beautiful rendering.  
-No subscription. No Electron. Native Swift, < 5 MB.
+<p align="center">
+  Press <strong>Space</strong> in Finder to preview Markdown with Mermaid, Math/LaTeX, code highlighting, tables, wikilinks, and local-only rendering.
+</p>
+
+<p align="center">
+  <a href="https://peekmark.quartz.ink/playground"><img alt="Try Playground" src="https://img.shields.io/badge/Try-Playground-E8B86D?style=for-the-badge"></a>
+  <a href="https://peekmark.quartz.ink/"><img alt="Website" src="https://img.shields.io/badge/Website-peekmark.quartz.ink-111111?style=for-the-badge"></a>
+  <a href="https://github.com/QuartzInkStudio/PeekMark/releases/download/v1.0.0/PeekMark-1.0.0.dmg"><img alt="Download DMG" src="https://img.shields.io/badge/Download-DMG-0A84FF?style=for-the-badge&logo=apple&logoColor=white"></a>
+</p>
+
+```bash
+brew install --cask QuartzInkStudio/tap/peekmark
+```
+
+<p align="center">
+  <img src="docs/images/peekmark-playground.png" alt="PeekMark Markdown Playground showing local Markdown input and rendered preview">
+</p>
+
+> Free and open source. Native Swift, no Electron, no subscription, and no remote document rendering.
 
 ## Open Core
 
