@@ -343,10 +343,13 @@ html, body {
 @media (prefers-color-scheme: dark) {
   {{HIGHLIGHT_DARK_CSS}}
 }
+
+/* ---------- Optional local customization ---------- */
+{{CUSTOM_CSS}}
 </style>
 </head>
 <body>
-<article class="markdown-body">
+<article class="markdown-body {{ARTICLE_CLASSES}}">
 {{CONTENT}}
 </article>
 <script nonce="{{SCRIPT_NONCE}}">
@@ -373,6 +376,8 @@ window.MathJax = {
 </script>
 <script nonce="{{SCRIPT_NONCE}}">
 (function() {
+  window.__quickMarkRenderState = { status: 'pending', errors: [] };
+
   function prepareMermaidBlocks() {
     document.querySelectorAll('pre > code.language-mermaid, pre > code.language-mmd').forEach(function(code, index) {
       var pre = code.parentElement;
@@ -385,32 +390,66 @@ window.MathJax = {
     });
   }
 
-  function runMermaid() {
+  async function runMermaid() {
     prepareMermaidBlocks();
     if (typeof mermaid === 'undefined' || typeof mermaid.initialize !== 'function') { return; }
     var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     try {
       mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: dark ? 'dark' : 'default' });
       if (typeof mermaid.run === 'function') {
-        mermaid.run({ querySelector: '.peekmark-mermaid' });
+        await mermaid.run({ querySelector: '.peekmark-mermaid' });
       } else if (typeof mermaid.init === 'function') {
-        mermaid.init(undefined, document.querySelectorAll('.peekmark-mermaid'));
+        await Promise.resolve(mermaid.init(undefined, document.querySelectorAll('.peekmark-mermaid')));
       }
     } catch (e) {
       document.documentElement.classList.add('peekmark-mermaid-error');
+      window.__quickMarkRenderState.errors.push('mermaid');
     }
   }
 
-  function run() {
+  async function waitForMath() {
+    if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+      try {
+        await window.MathJax.startup.promise;
+      } catch (e) {
+        window.__quickMarkRenderState.errors.push('math');
+      }
+    }
+  }
+
+  async function run() {
     if (typeof hljs !== 'undefined' && typeof hljs.highlightAll === 'function') {
       try { hljs.highlightAll(); } catch (e) { /* swallow */ }
     }
-    runMermaid();
+    try {
+      await Promise.all([runMermaid(), waitForMath()]);
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+      await new Promise(function(resolve) {
+        var settled = false;
+        function finish() {
+          if (settled) { return; }
+          settled = true;
+          resolve();
+        }
+        setTimeout(finish, 80);
+        requestAnimationFrame(function() { requestAnimationFrame(finish); });
+      });
+      window.__quickMarkRenderState.status = 'ready';
+    } catch (e) {
+      window.__quickMarkRenderState.status = 'failed';
+      window.__quickMarkRenderState.errors.push('unexpected');
+    }
+    document.documentElement.setAttribute('data-quickmark-render-status', window.__quickMarkRenderState.status);
+    window.dispatchEvent(new CustomEvent('quickmark-render-ready', {
+      detail: window.__quickMarkRenderState
+    }));
   }
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', run);
+    document.addEventListener('DOMContentLoaded', function() { void run(); });
   } else {
-    run();
+    void run();
   }
 })();
 </script>

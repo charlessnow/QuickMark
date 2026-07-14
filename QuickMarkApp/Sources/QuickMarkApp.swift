@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import AppKit
 import Carbon
+import QuickMarkCore
 
 @main
 struct QuickMarkApp: App {
@@ -10,6 +11,7 @@ struct QuickMarkApp: App {
 
     init() {
         QuickMarkSettings.registerDefaults()
+        QuickMarkExtensionLoader.loadConfiguredModule()
         ScratchpadHotKeyManager.shared.start()
     }
 
@@ -20,15 +22,14 @@ struct QuickMarkApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
+        .windowResizability(.contentSize)
         .defaultSize(width: 480, height: 300)
         .commands {
             QuickMarkFileCommands()
-            CommandGroup(replacing: .saveItem) {
-                Button("Save") {
-                    activeSplitPreviewViewController()?.saveCurrentFile(nil)
-                }
-                .keyboardShortcut("s")
-            }
+#if OFFICIAL_EXTENSIONS
+            OfficialOptionalCommands()
+#endif
+            QuickMarkSaveCommands()
             CommandGroup(after: .pasteboard) {
                 Button("Copy Rendered HTML") {
                     activeSplitPreviewViewController()?.copyHTML(nil)
@@ -52,6 +53,36 @@ struct QuickMarkApp: App {
         // Settings window (Cmd+,)
         Settings {
             SettingsView()
+        }
+    }
+}
+
+struct QuickMarkSaveCommands: Commands {
+    @ObservedObject private var runtimeState = QuickMarkExtensionRegistry.runtimeState
+
+    private var exporters: [any DocumentExporting] {
+        _ = runtimeState.revision
+        return QuickMarkExtensionRegistry.exporters
+    }
+
+    var body: some Commands {
+        CommandGroup(replacing: .saveItem) {
+            Button("Save") {
+                activeSplitPreviewViewController()?.saveCurrentFile(nil)
+            }
+            .keyboardShortcut("s")
+
+            if !exporters.isEmpty {
+                Divider()
+                Menu("Export") {
+                    ForEach(exporters.indices, id: \.self) { index in
+                        let exporter = exporters[index]
+                        Button("Export as \(exporter.format.displayName)…") {
+                            activeSplitPreviewViewController()?.exportDocument(using: exporter)
+                        }
+                    }
+                }
+            }
         }
     }
 }

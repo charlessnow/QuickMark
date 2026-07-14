@@ -1,6 +1,7 @@
 import AppKit
 import WebKit
 import QuickMarkCore
+import UniformTypeIdentifiers
 
 /// A floating split-view window:
 ///   Left  → editable NSTextView with raw Markdown source
@@ -213,6 +214,7 @@ final class SplitPreviewViewController: NSSplitViewController, NSToolbarDelegate
 
     func load(markdown: String, url: URL) {
         editorVC.setText(markdown)
+        previewVC.sourceURL = url
         previewVC.baseURL = url.deletingLastPathComponent()
         previewVC.render(markdown: markdown, baseURL: url.deletingLastPathComponent())
         editorVC.setCurrentURL(url)
@@ -221,6 +223,7 @@ final class SplitPreviewViewController: NSSplitViewController, NSToolbarDelegate
     func loadNew() {
         editorVC.setText("")
         editorVC.setCurrentURL(nil)
+        previewVC.sourceURL = nil
         previewVC.baseURL = nil
         previewVC.render(markdown: "")
         viewMode = .both
@@ -245,6 +248,65 @@ final class SplitPreviewViewController: NSSplitViewController, NSToolbarDelegate
         NSPasteboard.general.setString(html, forType: .html)
         NSPasteboard.general.setString(html, forType: .string)
         flashTitle("✓ HTML Copied")
+    }
+
+    func exportDocument(using exporter: any DocumentExporting) {
+        let panel = NSSavePanel()
+        panel.title = exporter.format.displayName
+        panel.nameFieldStringValue = "\(window?.title ?? "Untitled").\(exporter.format.filenameExtension)"
+        if let contentType = UTType(filenameExtension: exporter.format.filenameExtension) {
+            panel.allowedContentTypes = [contentType]
+        }
+
+        let completion: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            guard response == .OK, let destinationURL = panel.url, let self else { return }
+            let sourceURL = editorVC.documentURL
+            let purpose: RenderPurpose
+            switch exporter.format.filenameExtension.lowercased() {
+            case "pdf": purpose = .pdfExport
+            case "docx": purpose = .docxExport
+            default: purpose = .htmlExport
+            }
+            let context = RenderContext(
+                sourceURL: sourceURL,
+                title: window?.title ?? "PeekMark",
+                purpose: purpose
+            )
+            let provider = QuickMarkExtensionRegistry.customizationProviders.first
+            let markdown = editorVC.markdownText
+
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                do {
+                    let customization = try await provider?.customization(for: context) ?? .none
+                    let html = MarkdownRenderer.render(
+                        markdown: markdown,
+                        title: context.title,
+                        customization: customization
+                    )
+                    try await exporter.export(ExportRequest(
+                        html: html,
+                        context: context,
+                        destinationURL: destinationURL
+                    ))
+                    flashTitle("✓ Exported")
+                    NSWorkspace.shared.activateFileViewerSelecting([destinationURL])
+                } catch {
+                    let alert = NSAlert(error: error)
+                    alert.messageText = "Unable to Export Document"
+                    if let hostWindow = window ?? NSApp.keyWindow {
+                        alert.beginSheetModal(for: hostWindow) { _ in }
+                    } else {
+                        alert.runModal()
+                    }
+                }
+            }
+        }
+        if let hostWindow = window ?? NSApp.keyWindow {
+            panel.beginSheetModal(for: hostWindow, completionHandler: completion)
+        } else {
+            panel.begin(completionHandler: completion)
+        }
     }
 
     @objc func findInSource(_ sender: Any?) {
@@ -388,6 +450,7 @@ final class SplitPreviewViewController: NSSplitViewController, NSToolbarDelegate
 final class EditorViewController: NSViewController {
     var onTextChange: ((String) -> Void)?
     var markdownText: String { textView.string }
+    var documentURL: URL? { currentURL }
 
     private var currentURL: URL?
     private var securityScopedURL: URL?
@@ -513,7 +576,9 @@ extension EditorViewController: NSTextViewDelegate {
 
 final class PreviewWebViewController: NSViewController, WKNavigationDelegate {
     var baseURL: URL?
+    var sourceURL: URL?
     private var webView: WKWebView!
+    private var renderTask: Task<Void, Never>?
 
     override func loadView() {
         let config = WKWebViewConfiguration()
@@ -525,8 +590,37 @@ final class PreviewWebViewController: NSViewController, WKNavigationDelegate {
 
     func render(markdown: String, baseURL: URL? = nil) {
         let resolvedBase = baseURL ?? self.baseURL
-        let html = MarkdownRenderer.render(markdown: markdown, title: "Preview")
-        webView.loadHTMLString(html, baseURL: resolvedBase)
+        let context = RenderContext(sourceURL: sourceURL, title: "Preview", purpose: .appPreview)
+        let provider = QuickMarkExtensionRegistry.customizationProviders.first
+
+        renderTask?.cancel()
+        renderTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(for: .milliseconds(150))
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+
+            let customization: RenderCustomization
+            if let provider {
+                do {
+                    customization = try await provider.customization(for: context)
+                } catch {
+                    customization = .none
+                }
+            } else {
+                customization = .none
+            }
+            guard !Task.isCancelled, let self else { return }
+
+            let html = MarkdownRenderer.render(
+                markdown: markdown,
+                title: context.title,
+                customization: customization
+            )
+            webView.loadHTMLString(html, baseURL: resolvedBase)
+        }
     }
 
     func webView(_ webView: WKWebView,

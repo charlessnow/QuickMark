@@ -95,4 +95,47 @@ final class PreviewIntelligenceTests: XCTestCase {
         XCTAssertFalse(html.contains("{{MATHJAX_JS}}"))
         XCTAssertFalse(html.contains("<script src="))
     }
+
+    func testPublishesRenderReadinessAfterAsyncContentSettles() {
+        let html = MarkdownRenderer.render(markdown: """
+        ```mermaid
+        flowchart LR
+          A --> B
+        ```
+
+        Math $x^2$.
+        """)
+
+        XCTAssertTrue(html.contains("window.__quickMarkRenderState"))
+        XCTAssertTrue(html.contains("await Promise.all([runMermaid(), waitForMath()])"))
+        XCTAssertTrue(html.contains("quickmark-render-ready"))
+        XCTAssertTrue(html.contains("data-quickmark-render-status"))
+    }
+
+    func testAppliesLocalRenderCustomizationWithoutLeavingTemplatePlaceholders() {
+        let html = MarkdownRenderer.render(
+            markdown: "# Custom",
+            customization: RenderCustomization(
+                identifier: "test.theme",
+                additionalCSS: ".markdown-body { --fgColor-accent: #ff0000; }",
+                articleClassNames: ["theme-test", "invalid class"]
+            )
+        )
+
+        XCTAssertTrue(html.contains("--fgColor-accent: #ff0000"))
+        XCTAssertTrue(html.contains("class=\"markdown-body theme-test\""))
+        XCTAssertFalse(html.contains("invalid class"))
+        XCTAssertFalse(html.contains("{{CUSTOM_CSS}}"))
+        XCTAssertFalse(html.contains("{{ARTICLE_CLASSES}}"))
+    }
+
+    func testCustomCSSCannotCloseTheTemplateStyleElement() {
+        let html = MarkdownRenderer.render(
+            markdown: "Text",
+            customization: RenderCustomization(additionalCSS: "</STYLE><script>alert(1)</script>")
+        )
+
+        XCTAssertFalse(html.localizedCaseInsensitiveContains("</style><script>alert(1)</script>"))
+        XCTAssertTrue(html.contains("<\\/style>"))
+    }
 }
