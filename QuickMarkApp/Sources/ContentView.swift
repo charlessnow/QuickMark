@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct ContentView: View {
@@ -5,9 +6,11 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 56))
-                .foregroundStyle(.secondary)
+            Image(nsImage: NSApplication.shared.applicationIconImage)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 88, height: 88)
+                .accessibilityHidden(true)
             Text("PeekMark")
                 .font(.title.bold())
             Text("Quick Look preview is ready.\nSelect a Markdown file in Finder, then press Space to preview.")

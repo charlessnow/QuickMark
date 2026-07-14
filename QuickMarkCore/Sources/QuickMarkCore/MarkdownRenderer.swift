@@ -20,16 +20,24 @@ public struct MarkdownRenderer {
     ///   - markdown: Markdown source text.
     ///   - title:    Value used for the document `<title>`. Defaults to `"Preview"`.
     /// - Returns: A self-contained HTML string.
-    public static func render(markdown: String, title: String = "Preview") -> String {
+    public static func render(
+        markdown: String,
+        title: String = "Preview",
+        customization: RenderCustomization = .none
+    ) -> String {
         let intelligence = PreviewIntelligence(markdown: markdown)
         let document = Document(parsing: intelligence.markdownBody)
         let bodyHTML = intelligence.enhance(bodyHTML: HTMLFormatter.format(document))
-        return HTMLTemplate.build(bodyHTML: bodyHTML, title: title)
+        return HTMLTemplate.build(bodyHTML: bodyHTML, title: title, customization: customization)
     }
 
     /// Instance variant of ``render(markdown:title:)`` for callers that prefer
     /// to hold a renderer value.
-    public func render(_ markdown: String, title: String = "Preview") -> String {
-        Self.render(markdown: markdown, title: title)
+    public func render(
+        _ markdown: String,
+        title: String = "Preview",
+        customization: RenderCustomization = .none
+    ) -> String {
+        Self.render(markdown: markdown, title: title, customization: customization)
     }
 }

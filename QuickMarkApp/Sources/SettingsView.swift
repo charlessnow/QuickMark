@@ -26,14 +26,18 @@ private struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
                     .font(.subheadline)
             }
-            Section("Pro Features") {
-                Text("Custom themes, workspace search, and PDF export are planned for PeekMark Pro.")
+#if OFFICIAL_EXTENSIONS
+            OfficialOptionalFeaturesSettingsView()
+#else
+            Section("Optional Features") {
+                Text("Custom themes, workspace search, and additional export formats are available in official editions.")
                     .foregroundStyle(.secondary)
                     .font(.subheadline)
                 Button("Learn More…") {
                     NSWorkspace.shared.open(URL(string: "https://peekmark.app")!)
                 }
             }
+#endif
         }
         .formStyle(.grouped)
     }
@@ -92,9 +96,11 @@ private struct PreviewSettingsView: View {
 private struct AboutView: View {
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
+            Image(nsImage: NSApplication.shared.applicationIconImage)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 72, height: 72)
+                .accessibilityHidden(true)
             Text("PeekMark")
                 .font(.title2.bold())
             Text("Version 0.1.0 (Community)")

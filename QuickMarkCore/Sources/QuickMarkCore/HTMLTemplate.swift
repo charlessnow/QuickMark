@@ -20,6 +20,8 @@ public enum HTMLTemplate {
         static let highlightLightCSS  = "{{HIGHLIGHT_LIGHT_CSS}}"
         static let highlightDarkCSS   = "{{HIGHLIGHT_DARK_CSS}}"
         static let scriptNonce        = "{{SCRIPT_NONCE}}"
+        static let customCSS           = "{{CUSTOM_CSS}}"
+        static let articleClasses      = "{{ARTICLE_CLASSES}}"
     }
 
     // MARK: - Resource names
@@ -40,11 +42,17 @@ public enum HTMLTemplate {
     ///   - bodyHTML: HTML already produced from the Markdown AST.
     ///   - title:    Document `<title>`.
     /// - Returns: A fully self-contained HTML string.
-    public static func build(bodyHTML: String, title: String) -> String {
+    public static func build(
+        bodyHTML: String,
+        title: String,
+        customization: RenderCustomization = .none
+    ) -> String {
         var html = templateString()
         let scriptNonce = UUID().uuidString.replacingOccurrences(of: "-", with: "")
         html = html.replacingOccurrences(of: Placeholder.title,             with: htmlEscape(title))
         html = html.replacingOccurrences(of: Placeholder.scriptNonce,       with: scriptNonce)
+        html = html.replacingOccurrences(of: Placeholder.customCSS,         with: safeInlineCSS(customization.additionalCSS))
+        html = html.replacingOccurrences(of: Placeholder.articleClasses,    with: safeArticleClasses(customization.articleClassNames))
         html = html.replacingOccurrences(of: Placeholder.highlightLightCSS, with: loadResource(Resource.highlightLight))
         html = html.replacingOccurrences(of: Placeholder.highlightDarkCSS,  with: loadResource(Resource.highlightDark))
         html = html.replacingOccurrences(of: Placeholder.highlightJS,       with: loadResource(Resource.highlightJS))
@@ -71,15 +79,16 @@ public enum HTMLTemplate {
         <meta name="color-scheme" content="light dark">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src file: data:; media-src file: data:; font-src file: data:; style-src 'unsafe-inline'; script-src 'nonce-\(Placeholder.scriptNonce)'; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
         <title>\(Placeholder.title)</title>
-        <style>\(Placeholder.highlightLightCSS)\n@media (prefers-color-scheme: dark){\(Placeholder.highlightDarkCSS)}</style>
+        <style>\(Placeholder.highlightLightCSS)\n@media (prefers-color-scheme: dark){\(Placeholder.highlightDarkCSS)}\n\(Placeholder.customCSS)</style>
         </head>
-        <body><article class="markdown-body">\(Placeholder.content)</article>
+        <body><article class="markdown-body \(Placeholder.articleClasses)">\(Placeholder.content)</article>
         <script nonce="\(Placeholder.scriptNonce)">\(Placeholder.highlightJS)</script>
         <script nonce="\(Placeholder.scriptNonce)">if(typeof hljs!=='undefined'){hljs.highlightAll();}</script>
         <script nonce="\(Placeholder.scriptNonce)">\(Placeholder.mermaidJS)</script>
         <script nonce="\(Placeholder.scriptNonce)">if(typeof mermaid!=='undefined'){mermaid.initialize({startOnLoad:true,securityLevel:'strict'});}</script>
         <script nonce="\(Placeholder.scriptNonce)">window.MathJax={tex:{inlineMath:[['$','$'],['\\\\(','\\\\)']],displayMath:[['$$','$$'],['\\\\[','\\\\]']],processEscapes:true},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']},svg:{fontCache:'none'}};</script>
         <script nonce="\(Placeholder.scriptNonce)">\(Placeholder.mathJaxJS)</script>
+        <script nonce="\(Placeholder.scriptNonce)">window.__quickMarkRenderState={status:'ready',errors:[]};document.documentElement.setAttribute('data-quickmark-render-status','ready');window.dispatchEvent(new CustomEvent('quickmark-render-ready',{detail:window.__quickMarkRenderState}));</script>
         </body></html>
         """
     }
@@ -105,5 +114,21 @@ public enum HTMLTemplate {
          .replacingOccurrences(of: ">", with: "&gt;")
          .replacingOccurrences(of: "\"", with: "&quot;")
          .replacingOccurrences(of: "'", with: "&#39;")
+    }
+
+    private static func safeInlineCSS(_ css: String) -> String {
+        css.replacingOccurrences(of: "</style", with: "<\\/style", options: .caseInsensitive)
+    }
+
+    private static func safeArticleClasses(_ classes: [String]) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        return classes.compactMap { name in
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty,
+                  trimmed.unicodeScalars.allSatisfy(allowed.contains) else {
+                return nil
+            }
+            return trimmed
+        }.joined(separator: " ")
     }
 }

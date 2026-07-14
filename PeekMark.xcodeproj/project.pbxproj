@@ -58,7 +58,7 @@
 		B99E3B7C4790DE780684B589 /* PreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewViewController.swift; sourceTree = "<group>"; };
 		D1032F275C06D493280925DD /* MarkdownPreviewWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreviewWindow.swift; sourceTree = "<group>"; };
 		D5930CEE95459D0E5F893402 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
-		F11C727FD46CC04F24B2D70C /* QuickMarkCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = QuickMarkCore; path = QuickMarkCore; sourceTree = SOURCE_ROOT; };
+		F11C727FD46CC04F24B2D70C /* QuickMarkCore */ = {isa = PBXFileReference; lastKnownFileType = folder; path = QuickMarkCore; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -201,14 +201,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
-				TargetAttributes = {
-					183D479E6DE0A841E5AFCFFB = {
-						DevelopmentTeam = "";
-					};
-					8FE1094769F2A06EF7E1D49C = {
-						DevelopmentTeam = "";
-					};
-				};
 			};
 			buildConfigurationList = 04D27A61D5C48930CE548C62 /* Build configuration list for PBXProject "PeekMark" */;
 			developmentRegion = en;
@@ -365,6 +357,7 @@
 				CODE_SIGN_ENTITLEMENTS = QuickMarkQL/QuickMarkQL.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = M924X3MR87;
 				INFOPLIST_FILE = QuickMarkQL/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -472,6 +465,7 @@
 				CODE_SIGN_ENTITLEMENTS = QuickMarkApp/QuickMarkApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = M924X3MR87;
 				INFOPLIST_FILE = QuickMarkApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
