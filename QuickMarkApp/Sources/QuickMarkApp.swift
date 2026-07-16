@@ -14,7 +14,6 @@ struct QuickMarkApp: App {
     init() {
         QuickMarkSettings.registerDefaults()
         QuickMarkExtensionLoader.loadConfiguredModule()
-        ScratchpadHotKeyManager.shared.start()
     }
 
     var body: some Scene {
@@ -94,6 +93,10 @@ struct QuickMarkSaveCommands: Commands {
 }
 
 final class QuickMarkAppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        ScratchpadHotKeyManager.shared.start()
+    }
+
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
         false
     }

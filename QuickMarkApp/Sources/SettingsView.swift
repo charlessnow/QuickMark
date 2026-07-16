@@ -105,6 +105,10 @@ private struct AboutView: View {
                 .font(.title2.bold())
             Text(versionDescription)
                 .foregroundStyle(.secondary)
+            Link(destination: feedbackURL) {
+                Label("Send Feedback…", systemImage: "envelope")
+            }
+            .buttonStyle(.bordered)
 #if !APP_STORE
             Text("AGPL-3.0 Open Source")
                 .foregroundStyle(.secondary)
@@ -125,5 +129,15 @@ private struct AboutView: View {
 #else
         return "Version \(version) (Community)"
 #endif
+    }
+
+    private var feedbackURL: URL {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = "hello@quartz.ink"
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: "PeekMark Feedback — \(versionDescription)")
+        ]
+        return components.url ?? URL(string: "mailto:hello@quartz.ink")!
     }
 }

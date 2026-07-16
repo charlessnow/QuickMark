@@ -635,6 +635,10 @@ final class PreviewWebViewController: NSViewController, WKNavigationDelegate {
                 decisionHandler(.cancel)
                 return
             }
+            if openLocalMarkdownLink(navigationAction.request.url) {
+                decisionHandler(.cancel)
+                return
+            }
             if UserDefaults.standard.bool(forKey: QuickMarkSettings.openPreviewLinksExternally),
                let url = navigationAction.request.url,
                Self.canOpenExternally(url) {
@@ -655,6 +659,20 @@ final class PreviewWebViewController: NSViewController, WKNavigationDelegate {
             NSSound.beep()
             return true
         }
+        MarkdownPreviewWindowController.shared.show(url: linkedURL)
+        return true
+    }
+
+    private func openLocalMarkdownLink(_ url: URL?) -> Bool {
+        guard let url, url.isFileURL else { return false }
+
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        components?.fragment = nil
+        guard let linkedURL = components?.url?.standardizedFileURL,
+              QuickMarkMarkdownFiles.isMarkdown(linkedURL) else {
+            return false
+        }
+
         MarkdownPreviewWindowController.shared.show(url: linkedURL)
         return true
     }
