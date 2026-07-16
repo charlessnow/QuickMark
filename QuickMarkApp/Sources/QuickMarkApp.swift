@@ -7,7 +7,9 @@ import QuickMarkCore
 @main
 struct QuickMarkApp: App {
     @NSApplicationDelegateAdaptor(QuickMarkAppDelegate.self) private var appDelegate
+#if !APP_STORE
     @StateObject private var updater = UpdaterController()
+#endif
 
     init() {
         QuickMarkSettings.registerDefaults()
@@ -46,7 +48,11 @@ struct QuickMarkApp: App {
 
         // Menu bar extra
         MenuBarExtra("PeekMark", systemImage: "doc.text.magnifyingglass") {
+#if APP_STORE
+            MenuBarView()
+#else
             MenuBarView(updater: updater)
+#endif
         }
         .menuBarExtraStyle(.menu)
 

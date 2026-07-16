@@ -103,15 +103,27 @@ private struct AboutView: View {
                 .accessibilityHidden(true)
             Text("PeekMark")
                 .font(.title2.bold())
-            Text("Version 0.1.0 (Community)")
+            Text(versionDescription)
                 .foregroundStyle(.secondary)
+#if !APP_STORE
             Text("AGPL-3.0 Open Source")
                 .foregroundStyle(.secondary)
                 .font(.caption)
             Link("github.com/QuartzInkStudio/PeekMark",
                  destination: URL(string: "https://github.com/QuartzInkStudio/PeekMark")!)
                 .font(.caption)
+#endif
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var versionDescription: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? "—"
+#if APP_STORE
+        return "Version \(version) (Mac App Store)"
+#else
+        return "Version \(version) (Community)"
+#endif
     }
 }

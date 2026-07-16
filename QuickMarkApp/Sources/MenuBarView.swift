@@ -3,7 +3,9 @@ import AppKit
 import QuickMarkCore
 
 struct MenuBarView: View {
+#if !APP_STORE
     let updater: UpdaterController
+#endif
     @AppStorage(QuickMarkSettings.scratchpadHotKey) private var selectedHotKey = ScratchpadHotKeyOption.commandShiftM.rawValue
     @AppStorage(QuickMarkSettings.scratchpadHotKeyEnabled) private var hotKeyEnabled = true
     @AppStorage("ScratchpadHotKeyRegistrationStatus") private var registrationStatus = "registered"
@@ -41,10 +43,12 @@ struct MenuBarView: View {
             NSApp.activate(ignoringOtherApps: true)
         }
 
+#if !APP_STORE
         Button("Check for Updates…") {
             updater.checkForUpdates()
         }
         .disabled(!updater.canCheckForUpdates)
+#endif
 
         Divider()
 

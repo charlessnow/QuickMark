@@ -1,3 +1,4 @@
+#if !APP_STORE
 import Sparkle
 import SwiftUI
 
@@ -22,3 +23,4 @@ final class UpdaterController: ObservableObject {
         updaterController.checkForUpdates(nil)
     }
 }
+#endif
