@@ -13,6 +13,36 @@ final class MarkdownPreviewWindowController: NSObject {
     private weak var scratchpadWindow: NSWindow?
 
     func show(url: URL) {
+        _ = show(url: url, reportFailure: true)
+    }
+
+    func showLinkedDocument(url: URL, from hostWindow: NSWindow?) {
+        guard !show(url: url, reportFailure: false) else { return }
+
+        let panel = NSOpenPanel()
+        panel.title = "Allow Access to Linked Markdown File"
+        panel.message = "Choose \(url.lastPathComponent) to open this link."
+        panel.allowedContentTypes = QuickMarkMarkdownFiles.extensions.compactMap { .init(filenameExtension: $0) }
+        panel.allowsMultipleSelection = false
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.canCreateDirectories = false
+        panel.directoryURL = url.deletingLastPathComponent()
+        panel.nameFieldStringValue = url.lastPathComponent
+
+        let completion: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            guard response == .OK, let selectedURL = panel.url else { return }
+            self?.show(url: selectedURL)
+        }
+        if let hostWindow {
+            panel.beginSheetModal(for: hostWindow, completionHandler: completion)
+        } else {
+            panel.begin(completionHandler: completion)
+        }
+    }
+
+    @discardableResult
+    private func show(url: URL, reportFailure: Bool) -> Bool {
         let resolvedURL = RecentMarkdownStore.shared.resolvedURL(for: url)
         let didStartAccessing = resolvedURL.startAccessingSecurityScopedResource()
         defer {
@@ -25,9 +55,11 @@ final class MarkdownPreviewWindowController: NSObject {
         do {
             markdown = try String(contentsOf: resolvedURL, encoding: .utf8)
         } catch {
-            RecentMarkdownStore.shared.remove(url)
-            showOpenError(error, for: resolvedURL)
-            return
+            if reportFailure {
+                RecentMarkdownStore.shared.remove(url)
+                showOpenError(error, for: resolvedURL)
+            }
+            return false
         }
 
         let (window, splitVC) = createWindow()
@@ -35,6 +67,7 @@ final class MarkdownPreviewWindowController: NSObject {
         window.makeKeyAndOrderFront(nil)
         positionWindowForFirstOpen(window)
         NSApp.activate(ignoringOtherApps: true)
+        return true
     }
 
     func showNewDocument() {
@@ -659,7 +692,7 @@ final class PreviewWebViewController: NSViewController, WKNavigationDelegate {
             NSSound.beep()
             return true
         }
-        MarkdownPreviewWindowController.shared.show(url: linkedURL)
+        MarkdownPreviewWindowController.shared.showLinkedDocument(url: linkedURL, from: view.window)
         return true
     }
 
@@ -673,7 +706,7 @@ final class PreviewWebViewController: NSViewController, WKNavigationDelegate {
             return false
         }
 
-        MarkdownPreviewWindowController.shared.show(url: linkedURL)
+        MarkdownPreviewWindowController.shared.showLinkedDocument(url: linkedURL, from: view.window)
         return true
     }
 
