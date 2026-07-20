@@ -19,7 +19,7 @@ brew install --cask QuartzInkStudio/tap/peekmark
 ```
 
 <p align="center">
-  <img src="docs/images/peekmark-playground.png" alt="PeekMark Markdown Playground showing local Markdown input and rendered preview">
+  <img src="docs/images/peekmark-hero.png" alt="PeekMark showing a real local Markdown document and its rendered preview">
 </p>
 
 > Free and open source. Native Swift, no Electron, no subscription, and no remote document rendering.
