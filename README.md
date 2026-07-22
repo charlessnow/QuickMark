@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="https://apps.apple.com/us/app/peekmark-markdown-preview/id6791027819"><img alt="Download on the Mac App Store" src="https://img.shields.io/badge/Mac_App_Store-Download-000000?style=for-the-badge&logo=apple&logoColor=white"></a>
   <a href="https://peekmark.quartz.ink/playground"><img alt="Try Playground" src="https://img.shields.io/badge/Try-Playground-E8B86D?style=for-the-badge"></a>
   <a href="https://peekmark.quartz.ink/"><img alt="Website" src="https://img.shields.io/badge/Website-peekmark.quartz.ink-111111?style=for-the-badge"></a>
   <a href="https://github.com/QuartzInkStudio/PeekMark/releases/download/v1.0.0/PeekMark-1.0.0.dmg"><img alt="Download DMG" src="https://img.shields.io/badge/Download-DMG-0A84FF?style=for-the-badge&logo=apple&logoColor=white"></a>
@@ -24,12 +25,24 @@ brew install --cask QuartzInkStudio/tap/peekmark
 
 > Free and open source. Native Swift, no Electron, no subscription, and no remote document rendering.
 
+## Choose how to install
+
+| Channel | Current version | Best for | Pro and updates |
+|---------|-----------------|----------|-----------------|
+| [**Mac App Store**](https://apps.apple.com/us/app/peekmark-markdown-preview/id6791027819) | **1.0** | The simplest install and automatic updates | Pro Lifetime is an in-app purchase. Restore it with the same Apple Account. |
+| [**Signed Community DMG**](https://github.com/QuartzInkStudio/PeekMark/releases/download/v1.0.0/PeekMark-1.0.0.dmg) / Homebrew | **1.0.0** | A direct, signed open-source distribution | Update the direct edition separately. Direct Pro is sold at [peekmark.quartz.ink](https://peekmark.quartz.ink/). |
+| **Build from source** | `main` | Inspecting, contributing, or building Community yourself | Pro source is not included. |
+
+> App Store purchases and direct Quartz licenses are separate entitlements. They
+> are restored through the storefront where they were purchased and do not
+> automatically convert between channels.
+
 ## Open Core
 
 | Edition | License | How to get |
 |---------|---------|-----------|
-| **Community** (free) | AGPL-3.0 | Build from source or download signed binary |
-| **Pro** (paid) | Proprietary | Advanced workflow features, coming later |
+| **Community** (free) | AGPL-3.0 | Mac App Store, signed DMG, Homebrew, or build from source |
+| **Pro** (paid once) | Proprietary | Pro Lifetime in the App Store or a direct Quartz license |
 
 > The Community edition is fully open source. Pro modules are proprietary and
 > distributed only in official signed binaries.
@@ -47,7 +60,7 @@ brew install --cask QuartzInkStudio/tap/peekmark
 - ✅ Zero remote requests — works offline
 - ✅ Menu bar scratchpad and global hotkey
 
-## Planned Features (Pro)
+## Features (Pro)
 
 - Workspace / vault browsing
 - Backlinks, graph view, and link intelligence
@@ -56,8 +69,9 @@ brew install --cask QuartzInkStudio/tap/peekmark
 - PDF / DOCX / HTML export
 - Scratchpad history and quick-capture workflows
 
-Pro code is not included in this repository. Official signed binaries may include
-closed-source Pro modules loaded behind compile-time flags and license checks.
+Pro is available in the Mac App Store 1.0 and in official direct builds. Pro code
+is not included in this repository; official binaries load proprietary modules
+behind compile-time flags and entitlement checks.
 
 ## Build from Source
 
